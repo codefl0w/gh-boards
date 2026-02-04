@@ -1,6 +1,6 @@
-
+tree.py
 __pycache__/
-*.pyc
+*.pycgit
 .env
 .cache/
 .cache/*

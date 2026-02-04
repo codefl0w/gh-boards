@@ -1,0 +1,73 @@
+name: Add User from Issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  add-user:
+    if: startsWith(github.event.issue.title, 'Add User')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed for git log checks
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Process Issue & Create Manifest
+        id: process
+        env:
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python scripts/add_user_from_issue.py
+
+      - name: Commit and Push
+        if: success()
+        run: |
+          git config --global user.name "gh-boards-bot"
+          git config --global user.email "bot@users.noreply.github.com"
+          git add ${{ steps.process.outputs.USER_FILE }}
+          git commit -m "Add/Update User: ${{ steps.process.outputs.USER_NAME }}"
+          git push
+
+      - name: Close Issue (Success)
+        if: success()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            ## Success! :tada:
+            User `@${{ steps.process.outputs.USER_NAME }}` has been added/updated.
+            
+            Your board will be generated in the next hourly run, or you can use the instant preview link immediately.
+            
+            Closing this issue.
+      - name: Close Issue
+        if: success()
+        run: gh issue close ${{ github.event.issue.number }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Comment Failure
+        if: failure()
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            ## Processing Failed :x:
+            Please check the [Action Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+            
+            Common errors:
+            - Invalid JSON format
+            - User mismatch (You can only add yourself)
+            - Rate limiting (Wait 5 minutes)

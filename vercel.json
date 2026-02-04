@@ -1,0 +1,14 @@
+{
+    "builds": [
+        {
+            "src": "api/board.py",
+            "use": "@vercel/python"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/board",
+            "dest": "api/board.py"
+        }
+    ]
+}
