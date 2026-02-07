@@ -1,0 +1,21 @@
+{
+  "user": "codefl0w",
+  "defaults": {
+    "theme": "dark",
+    "output_dir": "out"
+  },
+  "select": {
+    "method": "top_stars",
+    "limit": 20
+  },
+  "artifacts": [
+    {
+      "id": "board",
+      "type": "board",
+      "options": {
+        "max_repos": 10,
+        "show_stars": true
+      }
+    }
+  ]
+}
