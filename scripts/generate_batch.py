@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
+"""
+Batch generator for gh-boards.
+Processes all user manifests in ./users and generates SVG artifacts.
+Supports schema_version 1 manifests with timestamps and artifact metadata.
+"""
 import sys
+import json
 from pathlib import Path
-from typing import Dict, List, Tuple
-import importlib
+from datetime import datetime, timezone
+from typing import Dict, List, Tuple, Any
 
 # Add project root to sys.path to allow imports from core/ and boards/
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
@@ -17,21 +23,40 @@ from boards.board_stars_downloads import render_svg
 # Constants
 USERS_DIR = PROJECT_ROOT / "users"
 SECRETS_PATH = PROJECT_ROOT / "secrets.json"
+OUTPUT_DIR = PROJECT_ROOT / "out"  # Hardcoded, not user-configurable
+
+
+def get_iso_now() -> str:
+    """Return current UTC time in ISO8601 format."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def save_manifest(path: Path, cfg: Dict[str, Any]) -> None:
+    """Write updated manifest back to disk."""
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2)
+
 
 def process_manifest(path: Path, headers: Dict[str, str]) -> None:
     cfg = load_user_manifest(path)
+    if not cfg:
+        print(f"[SKIP] Empty or invalid manifest: {path}", file=sys.stderr)
+        return
+
+    # Schema version check
+    schema_version = cfg.get("schema_version", 0)
     username = (str(cfg.get("user")).strip() if cfg.get("user") else "") or path.stem
 
-    # Global defaults for the manifest
+    # Global defaults
     defaults = cfg.get("defaults", {})
-    output_base_dir = PROJECT_ROOT / Path(defaults.get("output_dir", "out"))
+    default_theme = defaults.get("theme", "dark")
 
     # Select policy
     select = cfg.get("select", {})
     method = str(select.get("method", "top_stars"))
     limit = int(select.get("limit", 20) or 20)
 
-    # Determine repo list efficiently
+    # Determine repo list
     repos_data: List[dict] = []
     try:
         explicit_repos = cfg.get("targets", {}).get("repos")
@@ -53,10 +78,10 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         print(f"[{username}] Failed to fetch repo list: {e}", file=sys.stderr)
         return
 
-    # Compute stats for all selected repos once
-    print(f"[{username}] Gathering data for {len(repos_data)} repos (selected method={method}, limit={limit})...")
+    # Compute stats for all selected repos
+    print(f"[{username}] Gathering data for {len(repos_data)} repos (method={method}, limit={limit})...")
     base_rows: List[Tuple[str, int, int]] = []
-    
+
     for r in repos_data:
         name = r.get("name")
         if not name:
@@ -71,45 +96,73 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
     # Identify artifacts to render
     artifacts = cfg.get("artifacts")
     if not artifacts or not isinstance(artifacts, list):
-        # Fallback for simple/legacy manifests: generate default board
-        processed_artifacts = [{
-            "id": f"{username}_board",
+        # Fallback for legacy manifests
+        artifacts = [{
+            "id": "board",
             "type": "board",
-            "options": defaults
+            "style": "board_stars_downloads",
+            "options": {"max_repos": 10, "show_stars": True}
         }]
-    else:
-        processed_artifacts = artifacts
+        cfg["artifacts"] = artifacts
 
-    out_dir = output_base_dir / username
+    out_dir = OUTPUT_DIR / username
+    manifest_updated = False
 
-    for art in processed_artifacts:
+    for art in artifacts:
         art_type = art.get("type", "board")
-        # simplistic filtering: this script currently defaults to board_stars_downloads
-        # In a full system, we would map art_type to specific renderers
+        art_style = art.get("style", "board_stars_downloads")
+        art_status = art.get("status", "active")
+
+        # Skip paused artifacts
+        if art_status == "paused":
+            continue
+
+        # Currently only support board type
         if art_type != "board":
+            print(f"[{username}] Skipping unsupported artifact type: {art_type}")
             continue
 
         art_id = art.get("id", "board")
-        # Merge options: global defaults < artifact options
-        opts = defaults.copy()
+        
+        # Build options: merge defaults with artifact-specific options
+        opts = {
+            "theme": art.get("theme", default_theme),
+            "show_stars": True,
+            "show_downloads": True
+        }
         opts.update(art.get("options", {}))
 
         # Filter rows based on max_repos
-        max_repos = opts.get("max_repos", 20)
-        
-        # Sort by downloads descending by default for the board
+        max_repos = int(opts.get("max_repos", 10))
         sorted_rows = sorted(base_rows, key=lambda x: x[1], reverse=True)
-        final_rows = sorted_rows[:int(max_repos)]
+        final_rows = sorted_rows[:max_repos]
 
         out_file = out_dir / f"{art_id}.svg"
         render_svg(username, final_rows, out_file, options=opts)
         print(f"[{username}] Wrote {out_file} (rows={len(final_rows)})")
+
+        # Update artifact metadata
+        art["last_rendered_at"] = get_iso_now()
+        art["canonical_url"] = f"https://codefl0w.github.io/web-tools/gh-boards/out/{username}/{art_id}.svg"
+        manifest_updated = True
+
+    # Update manifest timestamps
+    if manifest_updated:
+        cfg["last_update"] = get_iso_now()
+        if "meta" not in cfg:
+            cfg["meta"] = {}
+        cfg["meta"]["last_processed_by"] = "scripts/generate_batch"
+        cfg["meta"]["last_processed_at"] = get_iso_now()
+        save_manifest(path, cfg)
+        print(f"[{username}] Updated manifest with timestamps")
+
 
 def main() -> None:
     if not USERS_DIR.exists():
         print("No ./users directory found. Create users/<username>.json and re-run.", file=sys.stderr)
         sys.exit(1)
 
+    # Load secrets (for local dev) or use env var (for GitHub Actions)
     secrets = load_secrets(SECRETS_PATH)
     headers = build_headers(secrets)
 
@@ -123,6 +176,7 @@ def main() -> None:
             process_manifest(m, headers)
         except Exception as e:
             print(f"Failed processing {m}: {e}", file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()

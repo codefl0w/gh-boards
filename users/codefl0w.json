@@ -1,0 +1,33 @@
+{
+    "schema_version": 1,
+    "user": "codefl0w",
+    "created_on": "2026-02-08T00:00:00Z",
+    "defaults": {
+        "theme": "dark",
+        "visibility": "public",
+        "max_repos": 10
+    },
+    "select": {
+        "method": "top_stars",
+        "limit": 20
+    },
+    "artifacts": [
+        {
+            "id": "board",
+            "type": "board",
+            "style": "board_stars_downloads",
+            "target": "profile",
+            "theme": "dark",
+            "options": {
+                "max_repos": 10,
+                "show_stars": true,
+                "show_downloads": true
+            },
+            "status": "active"
+        }
+    ],
+    "meta": {
+        "requested_by": "manual",
+        "requested_at": "2026-02-08T00:00:00Z"
+    }
+}

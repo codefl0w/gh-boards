@@ -1,3 +1,4 @@
+import os
 import requests
 from typing import Dict, List, Optional
 
@@ -7,7 +8,8 @@ MAX_PER_PAGE = 100
 
 def build_headers(secrets: Dict[str, str]) -> Dict[str, str]:
     headers = {"User-Agent": "gh-boards-generator/1.1", "Accept": "application/vnd.github+json"}
-    token = secrets.get("GITHUB_TOKEN")
+    # Check secrets.json first, then fall back to env var (GitHub Actions)
+    token = secrets.get("GITHUB_TOKEN") or os.environ.get("GITHUB_TOKEN")
     if token:
         headers["Authorization"] = f"Bearer {token}"
     return headers
