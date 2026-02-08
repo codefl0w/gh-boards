@@ -1,18 +1,9 @@
 name: Sync out/ to Pages repo
 
-# Trigger when the generator workflow completes successfully OR manually for testing
+# Run every hour and allow manual runs for testing
 on:
-  workflow_run:
-    # include both the workflow "name" AND the workflow file name (safer)
-    workflows:
-      - "hourly-generate"        # workflow name (as set by `name:` in that workflow file)
-      - "hourly-generate.yml"    # or the file name
-      - "generate-artifacts"     # additional fallback if you named it differently
-      - "generate-artifacts.yml"
-    types:
-      - completed
-
-  # manual dispatch for quick testing
+  schedule:
+    - cron: '0 * * * *'   # top of every hour (UTC)
   workflow_dispatch: {}
 
 permissions:
@@ -24,21 +15,18 @@ concurrency:
 
 jobs:
   sync:
-    # only run when the triggering workflow finished successfully
-    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Debug print event (for troubleshooting)
-        run: |
-          echo "EVENT_NAME: $GITHUB_EVENT_NAME"
-          echo "PATH: $GITHUB_EVENT_PATH"
-          echo "Event JSON:"
-          jq . "$GITHUB_EVENT_PATH" || cat "$GITHUB_EVENT_PATH"
-
       - name: Checkout gh-boards (this repo)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Debug - print run info
+        run: |
+          echo "RUN_ID: $GITHUB_RUN_ID"
+          echo "RUN_NUMBER: $GITHUB_RUN_NUMBER"
+          echo "REF: $GITHUB_REF"
 
       - name: Ensure out/ exists
         run: |
