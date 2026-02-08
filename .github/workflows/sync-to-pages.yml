@@ -1,13 +1,11 @@
 name: Sync out/ to Pages repo
 
-# Run whenever out/ is changed on push to the default branch
+# Trigger when the generator workflow completes successfully
 on:
-  push:
-    paths:
-      - 'out/**'
-    branches:
-      - main
-      - master
+  workflow_run:
+    workflows: ["generate-artifacts"]     # <- exact name of the generator workflow
+    types:
+      - completed
 
 permissions:
   contents: write
@@ -15,9 +13,9 @@ permissions:
 concurrency:
   group: sync-out-to-pages
   cancel-in-progress: true
-
 jobs:
   sync:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout gh-boards (this repo)
