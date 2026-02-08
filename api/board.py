@@ -13,8 +13,7 @@ from boards.board_stars_downloads import generate_svg_content
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        # 1. CORS & Security Check
-        # Allow requests from the official site and localhost (for dev)
+        # Allow requests from the official site and localhost 
         allowed_origins = [
             "https://codefl0w.github.io",
             "http://localhost:3000",
@@ -22,28 +21,24 @@ class handler(BaseHTTPRequestHandler):
         ]
         
         origin = self.headers.get("Origin")
-        # In a strict "browser-only" mode we would block if Origin is missing or wrong.
-        # But per user request for "Direct Links" (shields.io style), we MUST allow public access (no Origin).
-        # So we only add CORS headers if Origin is present, but we don't block empty Origins.
+    
         
         self.send_response(200)
         self.send_header('Content-type', 'image/svg+xml; charset=utf-8')
         
-        # Public Cache: 1 hour (3600s), stale-while-revalidate for 1 day
-        self.send_header('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400')
+        # Public Cache: 12 hour (43200s), stale-while-revalidate for 1 day
+        self.send_header('Cache-Control', 's-maxage=43200, stale-while-revalidate=86400')
         
         if origin and any(allowed in origin for allowed in allowed_origins):
             self.send_header('Access-Control-Allow-Origin', origin)
             self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
             self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         else:
-            # Fallback for direct links: Allow all (like shields.io)
-            # If we wanted to be strict, we'd check Referer here.
             self.send_header('Access-Control-Allow-Origin', '*')
 
         self.end_headers()
 
-        # 2. Parse Query Params
+        # Parse Query Params
         query = parse_qs(urlparse(self.path).query)
         user = query.get('user', [''])[0]
         theme = query.get('theme', ['dark'])[0]
