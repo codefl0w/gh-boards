@@ -12,6 +12,9 @@ on:
     types:
       - completed
 
+  # manual dispatch for quick testing
+  workflow_dispatch: {}
+
 permissions:
   contents: write
 
