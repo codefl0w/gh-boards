@@ -16,18 +16,22 @@
       "target": "profile",
       "theme": "light",
       "options": {
-        "max_repos": 16,
-        "show_stars": true,
+        "max_repos": 10,
+        "show_stars": false,
         "show_downloads": true
       },
       "status": "active"
     }
   ],
+  "cache": {
+    "repos_etag": null,
+    "last_checked": null
+  },
   "meta": {
     "requested_by": "web-ui",
-    "requested_at": "2026-02-08T02:37:25.487Z",
+    "requested_at": "2026-02-08T02:49:59.949Z",
     "last_processed_by": "issue-ops",
-    "last_processed_at": "2026-02-08T02:37:51Z"
+    "last_processed_at": "2026-02-08T02:50:23Z"
   },
-  "last_update": "2026-02-08T02:37:51Z"
+  "last_update": "2026-02-08T02:50:23Z"
 }
