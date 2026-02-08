@@ -2,13 +2,13 @@
 """
 Batch generator for gh-boards.
 Processes all user manifests in ./users and generates SVG artifacts.
-Supports schema_version 1 manifests with timestamps and artifact metadata.
+Supports schema_version 1 manifests with timestamps, artifact metadata, and ETag caching.
 """
 import sys
 import json
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
 
 # Add project root to sys.path to allow imports from core/ and boards/
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
@@ -16,7 +16,10 @@ sys.path.append(str(PROJECT_ROOT))
 
 # Core imports
 from core.utils import load_user_manifest, load_secrets
-from core.github_client import build_headers, fetch_repo, fetch_top_starred_repos, fetch_all_repos, repo_downloads
+from core.github_client import (
+    build_headers, fetch_repo, fetch_top_starred_repos_with_etag,
+    fetch_all_repos, repo_downloads
+)
 
 from boards.board_stars_downloads import render_svg
 
@@ -43,8 +46,6 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         print(f"[SKIP] Empty or invalid manifest: {path}", file=sys.stderr)
         return
 
-    # Schema version check
-    schema_version = cfg.get("schema_version", 0)
     username = (str(cfg.get("user")).strip() if cfg.get("user") else "") or path.stem
 
     # Global defaults
@@ -54,23 +55,49 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
     # Select policy
     select = cfg.get("select", {})
     method = str(select.get("method", "top_stars"))
-    limit = int(select.get("limit", 20) or 20)
 
-    # Determine repo list
+    # Cache section
+    cache = cfg.get("cache", {})
+    cached_etag = cache.get("repos_etag")
+
+    # Determine max_repos from first board artifact
+    artifacts = cfg.get("artifacts", [])
+    max_repos = 10
+    for art in artifacts:
+        if art.get("type") == "board":
+            max_repos = int(art.get("options", {}).get("max_repos", 10))
+            break
+
+    # ========== ETag-based conditional fetch ==========
     repos_data: List[dict] = []
+    new_etag: Optional[str] = None
+    data_changed = True  # Assume changed unless proven otherwise
+
     try:
         explicit_repos = cfg.get("targets", {}).get("repos")
         if explicit_repos and isinstance(explicit_repos, list):
+            # Explicit repos: always fetch (no ETag for individual repos)
             for rname in explicit_repos:
                 repo_json = fetch_repo(username, rname, headers)
                 if repo_json:
                     repos_data.append(repo_json)
         elif method == "top_stars":
-            try:
-                repos_data = fetch_top_starred_repos(username, headers, limit)
-                if not repos_data:
-                    repos_data = fetch_all_repos(username, headers)
-            except Exception:
+            # Use ETag caching for top_stars method
+            repos_data_result, new_etag, data_changed = fetch_top_starred_repos_with_etag(
+                username, headers, max_repos, cached_etag
+            )
+            
+            if not data_changed:
+                # Data hasn't changed - skip rendering entirely
+                print(f"[{username}] No changes detected (ETag match). Skipping render.")
+                # Update last_checked timestamp
+                cache["last_checked"] = get_iso_now()
+                cfg["cache"] = cache
+                save_manifest(path, cfg)
+                return
+            
+            repos_data = repos_data_result or []
+            if not repos_data:
                 repos_data = fetch_all_repos(username, headers)
         else:
             repos_data = fetch_all_repos(username, headers)
@@ -79,7 +106,7 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         return
 
     # Compute stats for all selected repos
-    print(f"[{username}] Gathering data for {len(repos_data)} repos (method={method}, limit={limit})...")
+    print(f"[{username}] Gathering data for {len(repos_data)} repos (method={method})...")
     base_rows: List[Tuple[str, int, int]] = []
 
     for r in repos_data:
@@ -93,10 +120,14 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             dls = 0
         base_rows.append((name, dls, stars))
 
+    # Update cache with new ETag
+    if new_etag:
+        cache["repos_etag"] = new_etag
+    cache["last_checked"] = get_iso_now()
+    cfg["cache"] = cache
+
     # Identify artifacts to render
-    artifacts = cfg.get("artifacts")
-    if not artifacts or not isinstance(artifacts, list):
-        # Fallback for legacy manifests
+    if not artifacts:
         artifacts = [{
             "id": "board",
             "type": "board",
@@ -110,7 +141,6 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
 
     for art in artifacts:
         art_type = art.get("type", "board")
-        art_style = art.get("style", "board_stars_downloads")
         art_status = art.get("status", "active")
 
         # Skip paused artifacts
@@ -124,7 +154,7 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
 
         art_id = art.get("id", "board")
         
-        # Build options: merge defaults with artifact-specific options
+        # Build options
         opts = {
             "theme": art.get("theme", default_theme),
             "show_stars": True,
@@ -133,9 +163,9 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         opts.update(art.get("options", {}))
 
         # Filter rows based on max_repos
-        max_repos = int(opts.get("max_repos", 10))
+        art_max_repos = int(opts.get("max_repos", 10))
         sorted_rows = sorted(base_rows, key=lambda x: x[1], reverse=True)
-        final_rows = sorted_rows[:max_repos]
+        final_rows = sorted_rows[:art_max_repos]
 
         out_file = out_dir / f"{art_id}.svg"
         render_svg(username, final_rows, out_file, options=opts)
@@ -154,7 +184,7 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         cfg["meta"]["last_processed_by"] = "scripts/generate_batch"
         cfg["meta"]["last_processed_at"] = get_iso_now()
         save_manifest(path, cfg)
-        print(f"[{username}] Updated manifest with timestamps")
+        print(f"[{username}] Updated manifest with timestamps and cache")
 
 
 def main() -> None:
