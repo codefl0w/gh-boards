@@ -3,7 +3,7 @@ name: Sync out/ to Pages repo
 # Trigger when the generator workflow completes successfully
 on:
   workflow_run:
-    workflows: ["generate-artifacts"]     # <- exact name of the generator workflow
+    workflows: ["hourly-generate"]  
     types:
       - completed
 
