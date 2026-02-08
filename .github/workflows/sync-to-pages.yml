@@ -3,7 +3,7 @@ name: Sync out/ to Pages repo
 # Trigger when the generator workflow completes successfully
 on:
   workflow_run:
-    workflows: ["hourly-generate"]  
+    workflows: ["hourly-generate.yml"]  
     types:
       - completed
 
