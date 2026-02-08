@@ -1,11 +1,19 @@
 name: Sync out/ to Pages repo
 
-# Trigger when the generator workflow completes successfully
+# Trigger when the generator workflow completes successfully OR manually for testing
 on:
   workflow_run:
-    workflows: ["hourly-generate.yml"]  
+    # include both the workflow "name" AND the workflow file name (safer)
+    workflows:
+      - "hourly-generate"        # workflow name (as set by `name:` in that workflow file)
+      - "hourly-generate.yml"    # or the file name
+      - "generate-artifacts"     # additional fallback if you named it differently
+      - "generate-artifacts.yml"
     types:
       - completed
+
+  # manual dispatch for quick testing
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -13,11 +21,20 @@ permissions:
 concurrency:
   group: sync-out-to-pages
   cancel-in-progress: true
+
 jobs:
   sync:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # only run when the triggering workflow finished successfully
+    if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Debug print event (for troubleshooting)
+        run: |
+          echo "EVENT_NAME: $GITHUB_EVENT_NAME"
+          echo "PATH: $GITHUB_EVENT_PATH"
+          echo "Event JSON:"
+          jq . "$GITHUB_EVENT_PATH" || cat "$GITHUB_EVENT_PATH"
+
       - name: Checkout gh-boards (this repo)
         uses: actions/checkout@v4
         with:
@@ -37,7 +54,6 @@ jobs:
 
       - name: Copy generated files into tmp workspace
         run: |
-          # Copy the entire out/ tree into tmp-pages/gh-boards/out/
           rsync -av --delete out/ tmp-pages/gh-boards/out/
 
       - name: Checkout Pages repository
@@ -53,9 +69,7 @@ jobs:
           PAGES_DIR: pages-repo/gh-boards/out
         run: |
           set -e
-          # Ensure destination directory exists
           mkdir -p "$PAGES_DIR"
-          # Copy files from tmp workspace into pages repo (overwrites)
           rsync -av --delete tmp-pages/gh-boards/out/ "$PAGES_DIR/"
           cd pages-repo
           git config user.name "gh-boards-bot"
