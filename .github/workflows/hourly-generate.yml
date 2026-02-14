@@ -46,6 +46,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "🔄 Hourly badge update [skip ci]"
+            git commit -m "Hourly badge update [skip ci]"
             git push
           fi

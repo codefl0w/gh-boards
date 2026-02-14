@@ -22,6 +22,7 @@ from core.github_client import (
 )
 
 from boards.board_stars_downloads import render_svg
+from badges.badge import render_badge_svg
 
 # Constants
 USERS_DIR = PROJECT_ROOT / "users"
@@ -147,33 +148,61 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         if art_status == "paused":
             continue
 
-        # Currently only support board type
-        if art_type != "board":
+        art_id = art.get("id", art_type)
+
+        if art_type == "board":
+            # Build options
+            opts = {
+                "theme": art.get("theme", default_theme),
+                "show_stars": True,
+                "show_downloads": True
+            }
+            opts.update(art.get("options", {}))
+
+            # Filter rows based on max_repos
+            art_max_repos = int(opts.get("max_repos", 10))
+            sorted_rows = sorted(base_rows, key=lambda x: x[1], reverse=True)
+            final_rows = sorted_rows[:art_max_repos]
+
+            out_file = out_dir / f"{art_id}.svg"
+            render_svg(username, final_rows, out_file, options=opts)
+            print(f"[{username}] Wrote {out_file} (rows={len(final_rows)})")
+
+        elif art_type == "badge":
+            opts = art.get("options", {})
+            badge_type = opts.get("badge_type", "stars")
+            target_repo = opts.get("repo", "")
+
+            if not target_repo:
+                print(f"[{username}] Badge '{art_id}' missing 'repo' option, skipping")
+                continue
+
+            # Find this repo in base_rows, or look it up individually
+            match = [r for r in base_rows if r[0] == target_repo]
+            if match:
+                _, dls, stars = match[0]
+            else:
+                # Repo not in the fetched set — fetch individually
+                from core.github_client import fetch_repo as _fetch_repo
+                repo_json = _fetch_repo(username, target_repo, headers)
+                stars = int((repo_json or {}).get("stargazers_count", 0))
+                try:
+                    dls = repo_downloads(username, target_repo, headers)
+                except Exception:
+                    dls = 0
+
+            value = stars if badge_type == "stars" else dls
+            out_file = out_dir / f"{art_id}.svg"
+            render_badge_svg(username, target_repo, value, out_file, opts)
+            print(f"[{username}] Wrote badge {out_file} ({badge_type}={value})")
+
+        else:
             print(f"[{username}] Skipping unsupported artifact type: {art_type}")
             continue
 
-        art_id = art.get("id", "board")
-        
-        # Build options
-        opts = {
-            "theme": art.get("theme", default_theme),
-            "show_stars": True,
-            "show_downloads": True
-        }
-        opts.update(art.get("options", {}))
-
-        # Filter rows based on max_repos
-        art_max_repos = int(opts.get("max_repos", 10))
-        sorted_rows = sorted(base_rows, key=lambda x: x[1], reverse=True)
-        final_rows = sorted_rows[:art_max_repos]
-
-        out_file = out_dir / f"{art_id}.svg"
-        render_svg(username, final_rows, out_file, options=opts)
-        print(f"[{username}] Wrote {out_file} (rows={len(final_rows)})")
-
         # Update artifact metadata
         art["last_rendered_at"] = get_iso_now()
-        art["canonical_url"] = f"https://codefl0w.github.io/web-tools/gh-boards/out/{username}/{art_id}.svg"
+        art["canonical_url"] = f"https://codefl0w.xyz/gh-boards/out/{username}/{art_id}.svg"
         manifest_updated = True
 
     # Update manifest timestamps
