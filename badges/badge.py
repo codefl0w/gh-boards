@@ -25,7 +25,7 @@ DOWNLOAD_ICON = (
 
 def _text_width(text: str, font_size: float = 11) -> float:
     """Rough character-width estimate for sans-serif at given size."""
-    return len(text) * font_size * 0.62
+    return len(text) * font_size * 0.58
 
 
 def generate_badge_svg(
@@ -50,10 +50,10 @@ def generate_badge_svg(
 
     # Determine label text & icon
     if badge_type == "downloads":
-        label_text = f"GitHub downloads "
+        label_text = f"GitHub downloads"
         icon_path = DOWNLOAD_ICON
     else:
-        label_text = f"GitHub stars "
+        label_text = f"GitHub stars"
         icon_path = STAR_ICON
 
     value_text = abbreviate(value)
