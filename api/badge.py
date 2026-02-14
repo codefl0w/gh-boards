@@ -19,7 +19,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         # CORS
         allowed_origins = [
-            "https://codefl0w.github.io",
+            "codefl0w.xyz",
             "http://localhost:3000",
             "http://127.0.0.1:3000",
         ]
