@@ -1,7 +1,10 @@
 tree.py
+INSTRUCTIONS.md
 __pycache__/
 *.pycgit
 .env
 .cache/
 .cache/*
 web/
+out/codefl0w/
+
