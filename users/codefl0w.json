@@ -10,30 +10,43 @@
   },
   "artifacts": [
     {
-      "id": "board",
+      "id": "badge_downloads",
+      "type": "badge",
+      "style": "badge_downloads",
+      "target": "profile",
+      "theme": "dark",
+      "status": "active",
+      "options": {
+        "badge_type": "downloads",
+        "repo": "mtkclient-windows-installer",
+        "color": "#2ea44f",
+        "label_color": "#555555",
+        "text_style": "normal"
+      }
+    },
+    {
+      "id": "board_stars_downloads",
       "type": "board",
       "style": "board_stars_downloads",
       "target": "profile",
       "theme": "dark",
+      "status": "active",
       "options": {
         "max_repos": 10,
         "show_stars": true,
         "show_downloads": true
-      },
-      "status": "active",
-      "last_rendered_at": "2026-02-14T17:31:57Z",
-      "canonical_url": "https://codefl0w.github.io/web-tools/gh-boards/out/codefl0w/board.svg"
+      }
     }
   ],
   "cache": {
     "repos_etag": null,
-    "last_checked": "2026-02-14T17:31:57Z"
+    "last_checked": null
   },
   "meta": {
     "requested_by": "web-ui",
-    "requested_at": "2026-02-10T18:07:51.578Z",
-    "last_processed_by": "scripts/generate_batch",
-    "last_processed_at": "2026-02-14T17:31:57Z"
+    "requested_at": "2026-02-14T18:19:06.874Z",
+    "last_processed_by": "issue-ops",
+    "last_processed_at": "2026-02-14T18:19:45Z"
   },
-  "last_update": "2026-02-14T17:31:57Z"
+  "last_update": "2026-02-14T18:19:45Z"
 }
