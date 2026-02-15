@@ -1,9 +1,11 @@
 name: Sync out/ to Pages repo
 
-# Run every hour and allow manual runs for testing
+# Run automatically after generation finishes, or manually
 on:
-  schedule:
-    - cron: '0 * * * *'   # top of every hour (UTC)
+  workflow_run:
+    workflows: ["Hourly Badge Generation"]
+    types:
+      - completed
   workflow_dispatch: {}
 
 permissions:
@@ -16,6 +18,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Only sync if generation succeeded (skip on failure/cancellation)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout gh-boards (this repo)
         uses: actions/checkout@v4
