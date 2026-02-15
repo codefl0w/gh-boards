@@ -173,25 +173,53 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             badge_type = opts.get("badge_type", "stars")
             target_repo = opts.get("repo", "")
 
-            if not target_repo:
+            # Followers is user-level — no repo needed
+            if badge_type != "followers" and not target_repo:
                 print(f"[{username}] Badge '{art_id}' missing 'repo' option, skipping")
                 continue
 
-            # Find this repo in base_rows, or look it up individually
-            match = [r for r in base_rows if r[0] == target_repo]
-            if match:
-                _, dls, stars = match[0]
-            else:
-                # Repo not in the fetched set — fetch individually
-                from core.github_client import fetch_repo as _fetch_repo
-                repo_json = _fetch_repo(username, target_repo, headers)
-                stars = int((repo_json or {}).get("stargazers_count", 0))
-                try:
-                    dls = repo_downloads(username, target_repo, headers)
-                except Exception:
-                    dls = 0
+            # ── Resolve value based on badge_type ──
+            if badge_type == "stars":
+                match = [r for r in base_rows if r[0] == target_repo]
+                if match:
+                    value = match[0][2]  # stars
+                else:
+                    from core.github_client import fetch_repo as _fetch_repo
+                    repo_json = _fetch_repo(username, target_repo, headers)
+                    value = int((repo_json or {}).get("stargazers_count", 0))
 
-            value = stars if badge_type == "stars" else dls
+            elif badge_type == "downloads":
+                match = [r for r in base_rows if r[0] == target_repo]
+                if match:
+                    value = match[0][1]  # downloads
+                else:
+                    try:
+                        value = repo_downloads(username, target_repo, headers)
+                    except Exception:
+                        value = 0
+
+            elif badge_type == "followers":
+                from core.github_client import fetch_followers_count
+                value = fetch_followers_count(username, headers)
+
+            elif badge_type == "watchers":
+                from core.github_client import fetch_watchers_count
+                value = fetch_watchers_count(username, target_repo, headers)
+
+            elif badge_type == "workflow_status":
+                from core.github_client import fetch_latest_workflow_run, workflow_status_label
+                wf = opts.get("workflow") or None
+                run, _, _ = fetch_latest_workflow_run(username, target_repo, headers, wf)
+                status_text, status_color = workflow_status_label(run)
+                value = status_text
+                opts["color"] = status_color
+                if wf:
+                    opts["workflow"] = wf
+
+            else:
+                print(f"[{username}] Unknown badge_type '{badge_type}', skipping")
+                continue
+
             out_file = out_dir / f"{art_id}.svg"
             render_badge_svg(username, target_repo, value, out_file, opts)
             print(f"[{username}] Wrote badge {out_file} ({badge_type}={value})")

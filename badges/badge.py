@@ -1,13 +1,21 @@
 """
-Shields.io-style badge renderer for stars and downloads.
-Generates a two-part pill SVG: [label | value]
+Shields.io-style badge renderer.
+Generates a two-part pill SVG: [icon label | value]
+
+Supported badge_type values:
+  - stars         (repo-level)
+  - downloads     (repo-level)
+  - followers     (user-level)
+  - watchers      (repo-level, uses subscribers_count)
+  - workflow_status (repo-level, status text + status-driven color)
 """
-from typing import Dict
+from typing import Dict, Union
 from pathlib import Path
 from html import escape as esc
 from core.utils import abbreviate
 
-# SVG icon paths (16×16 viewbox)
+# ── SVG icon paths (16×16 viewbox) ──────────────────────────────────────────
+
 STAR_ICON = (
     "M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279"
     "l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75"
@@ -21,42 +29,82 @@ DOWNLOAD_ICON = (
     " 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1"
     " 1.06-1.06l1.97 1.969Z"
 )
+FOLLOWERS_ICON = (
+    "M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1"
+    "-1.482.235 4.001 4.001 0 0 0-6.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1"
+    " 4.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01"
+    " 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507"
+    " 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672"
+    "A1.5 1.5 0 0 0 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z"
+)
+EYE_ICON = (
+    "M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62"
+    " 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.671 13.008 9.981 14"
+    " 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.831.88 9.577.43 8.899a1.62"
+    " 1.62 0 0 1 0-1.798c.45-.678 1.367-1.932 2.637-3.023C4.329 2.992 6.019 2 8"
+    " 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176"
+    " 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954"
+    "-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10"
+    ".824 4.242 9.473 3.5 8 3.5c-1.473 0-2.824.742-3.955 1.715-1.124.967-1.954"
+    " 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"
+)
+WORKFLOW_ICON = (
+    "M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75"
+    " 0 0 1 14.25 16H1.75A1.75 1.75 0 0 1 0 14.25Zm1.75-.25a.25.25 0 0 0-.25"
+    ".25v12.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0"
+    "-.25-.25Zm9.22 3.72a.749.749 0 0 1 0 1.06L7.28 9.97a.749.749 0 0 1-1.06 0"
+    "L4.47 8.22a.749.749 0 1 1 1.06-1.06l1.22 1.22 3.16-3.16a.749.749 0 0 1"
+    " 1.06 0Z"
+)
+
+# Badge type → (label text, icon path)
+BADGE_CONFIG = {
+    "stars":           ("GitHub stars",    STAR_ICON),
+    "downloads":       ("GitHub downloads", DOWNLOAD_ICON),
+    "followers":       ("GitHub followers", FOLLOWERS_ICON),
+    "watchers":        ("GitHub watchers",  EYE_ICON),
+    "workflow_status": ("build",            WORKFLOW_ICON),
+}
 
 
 def _text_width(text: str, font_size: float = 11) -> float:
     """Rough character-width estimate for sans-serif at given size."""
-    return len(text) * font_size * 0.58
+    return len(text) * font_size * 0.56
 
 
 def generate_badge_svg(
     username: str,
     repo: str,
-    value: int,
+    value: Union[int, str],
     options: Dict,
 ) -> str:
     """
     Render a Shields.io-style pill badge.
 
-    options keys:
-        badge_type  : "stars" | "downloads"
-        color       : hex color for value half  (default "#2ea44f")
-        label_color : hex color for label half  (default "#555")
-        text_style  : "normal" | "bold" | "italic"  (default "normal")
+    For numeric badges (stars, downloads, followers, watchers):
+        value is an int → abbreviated automatically.
+    For workflow_status:
+        value is a string like "passing", "failed", etc.
+        The color is driven by the status, not by user's `color` option.
     """
     badge_type = options.get("badge_type", "stars")
     color = options.get("color", "#2ea44f")
     label_color = options.get("label_color", "#555")
     text_style = options.get("text_style", "normal")
 
-    # Determine label text & icon
-    if badge_type == "downloads":
-        label_text = f"GitHub downloads"
-        icon_path = DOWNLOAD_ICON
-    else:
-        label_text = f"GitHub stars"
-        icon_path = STAR_ICON
+    # Look up label & icon
+    label_text, icon_path = BADGE_CONFIG.get(badge_type, ("badge", STAR_ICON))
+    # Override label for workflow if a workflow file is specified
+    if badge_type == "workflow_status":
+        wf = options.get("workflow", "")
+        if wf:
+            label_text = wf.replace(".yml", "").replace(".yaml", "")
 
-    value_text = abbreviate(value)
+    # Value text
+    if isinstance(value, int):
+        value_text = abbreviate(value)
+    else:
+        value_text = str(value)
 
     # Font properties
     font_size = 11
@@ -70,6 +118,8 @@ def generate_badge_svg(
     pad = 6
     label_w = pad + icon_w + icon_pad + _text_width(label_text, font_size) + pad
     value_w = pad + _text_width(value_text, font_size) + pad
+    # Ensure minimum value width
+    value_w = max(value_w, 32)
     total_w = label_w + value_w
 
     # Build SVG
@@ -100,7 +150,7 @@ def generate_badge_svg(
         f'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" '
         f'font-size="{font_size}" font-weight="{font_weight}" '
         f'font-style="{font_style_attr}">'
-        f'{label_text}</text>'
+        f'{esc(label_text)}</text>'
     )
 
     # Value text (centered in value half)
@@ -110,7 +160,7 @@ def generate_badge_svg(
         f'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" '
         f'font-size="{font_size}" font-weight="{font_weight}" '
         f'font-style="{font_style_attr}" text-anchor="middle">'
-        f'{value_text}</text>'
+        f'{esc(value_text)}</text>'
     )
 
     svg += '</svg>'
@@ -120,7 +170,7 @@ def generate_badge_svg(
 def render_badge_svg(
     username: str,
     repo: str,
-    value: int,
+    value: Union[int, str],
     out_path: Path,
     options: Dict,
 ) -> None:
