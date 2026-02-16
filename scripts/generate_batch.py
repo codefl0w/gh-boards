@@ -137,7 +137,7 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
         }]
         cfg["artifacts"] = artifacts
 
-    out_dir = OUTPUT_DIR / username
+    user_dir = OUTPUT_DIR / username
     manifest_updated = False
 
     for art in artifacts:
@@ -164,8 +164,10 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             sorted_rows = sorted(base_rows, key=lambda x: x[1], reverse=True)
             final_rows = sorted_rows[:art_max_repos]
 
-            out_file = out_dir / f"{art_id}.svg"
+            # Profile-level boards: out/{USER}/profile/{art_id}.svg
+            out_file = user_dir / "profile" / f"{art_id}.svg"
             render_svg(username, final_rows, out_file, options=opts)
+            canonical_path = f"profile/{art_id}.svg"
             print(f"[{username}] Wrote {out_file} (rows={len(final_rows)})")
 
         elif art_type == "badge":
@@ -220,7 +222,16 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
                 print(f"[{username}] Unknown badge_type '{badge_type}', skipping")
                 continue
 
-            out_file = out_dir / f"{art_id}.svg"
+            # Path: user-level badges → profile/, repo-specific → badge/
+            if badge_type == "followers":
+                out_file = user_dir / "profile" / f"{art_id}.svg"
+                canonical_path = f"profile/{art_id}.svg"
+            else:
+                safe_repo = target_repo.replace("/", "_")
+                filename = f"{art_id}_{safe_repo}.svg"
+                out_file = user_dir / "badge" / filename
+                canonical_path = f"badge/{filename}"
+
             render_badge_svg(username, target_repo, value, out_file, opts)
             print(f"[{username}] Wrote badge {out_file} ({badge_type}={value})")
 
@@ -230,7 +241,7 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
 
         # Update artifact metadata
         art["last_rendered_at"] = get_iso_now()
-        art["canonical_url"] = f"https://codefl0w.xyz/gh-boards/out/{username}/{art_id}.svg"
+        art["canonical_url"] = f"https://codefl0w.xyz/gh-boards/out/{username}/{canonical_path}"
         manifest_updated = True
 
     # Update manifest timestamps
