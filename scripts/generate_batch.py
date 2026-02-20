@@ -140,6 +140,31 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
     user_dir = OUTPUT_DIR / username
     manifest_updated = False
 
+    # ── In-memory request cache (dedup API calls within this run) ────────
+    repo_meta_cache = {}   # repo_name → full /repos/{owner}/{repo} JSON
+    downloads_cache = {}   # repo_name → int
+    user_profile_cache = {}  # "profile" → full /users/{user} JSON
+
+    def _get_repo_meta(repo_name):
+        if repo_name not in repo_meta_cache:
+            repo_meta_cache[repo_name] = fetch_repo(username, repo_name, headers) or {}
+        return repo_meta_cache[repo_name]
+
+    def _get_downloads(repo_name):
+        if repo_name not in downloads_cache:
+            try:
+                downloads_cache[repo_name] = repo_downloads(username, repo_name, headers)
+            except Exception:
+                downloads_cache[repo_name] = 0
+        return downloads_cache[repo_name]
+
+    def _get_user_profile():
+        if "profile" not in user_profile_cache:
+            from core.github_client import fetch_user_profile
+            data, _, _ = fetch_user_profile(username, headers)
+            user_profile_cache["profile"] = data or {}
+        return user_profile_cache["profile"]
+
     for art in artifacts:
         art_type = art.get("type", "board")
         art_status = art.get("status", "active")
@@ -180,33 +205,26 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
                 print(f"[{username}] Badge '{art_id}' missing 'repo' option, skipping")
                 continue
 
-            # ── Resolve value based on badge_type ──
+            # ── Resolve value (using cached API responses) ──
             if badge_type == "stars":
                 match = [r for r in base_rows if r[0] == target_repo]
                 if match:
-                    value = match[0][2]  # stars
+                    value = match[0][2]
                 else:
-                    from core.github_client import fetch_repo as _fetch_repo
-                    repo_json = _fetch_repo(username, target_repo, headers)
-                    value = int((repo_json or {}).get("stargazers_count", 0))
+                    value = int(_get_repo_meta(target_repo).get("stargazers_count", 0))
 
             elif badge_type == "downloads":
                 match = [r for r in base_rows if r[0] == target_repo]
                 if match:
-                    value = match[0][1]  # downloads
+                    value = match[0][1]
                 else:
-                    try:
-                        value = repo_downloads(username, target_repo, headers)
-                    except Exception:
-                        value = 0
+                    value = _get_downloads(target_repo)
 
             elif badge_type == "followers":
-                from core.github_client import fetch_followers_count
-                value = fetch_followers_count(username, headers)
+                value = int(_get_user_profile().get("followers", 0))
 
             elif badge_type == "watchers":
-                from core.github_client import fetch_watchers_count
-                value = fetch_watchers_count(username, target_repo, headers)
+                value = int(_get_repo_meta(target_repo).get("subscribers_count", 0))
 
             elif badge_type == "workflow_status":
                 from core.github_client import fetch_latest_workflow_run, workflow_status_label
@@ -217,6 +235,12 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
                 opts["color"] = status_color
                 if wf:
                     opts["workflow"] = wf
+
+            elif badge_type == "license":
+                lic = _get_repo_meta(target_repo).get("license") or {}
+                value = lic.get("name") or "no license"
+                if not lic.get("name"):
+                    opts["color"] = "#d73a49"
 
             else:
                 print(f"[{username}] Unknown badge_type '{badge_type}', skipping")

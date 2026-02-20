@@ -116,6 +116,13 @@ class handler(BaseHTTPRequestHandler):
                 if wf:
                     badge_opts["workflow"] = wf
 
+            elif badge_type == "license":
+                repo_data = fetch_repo(user, repo, headers)
+                lic = (repo_data or {}).get("license") or {}
+                value = lic.get("name") or "no license"
+                if not lic.get("name"):
+                    badge_opts["color"] = "#d73a49"
+
             else:
                 self.wfile.write(_error_svg(f"unknown type: {badge_type}"))
                 return
