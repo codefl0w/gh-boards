@@ -70,8 +70,8 @@ BADGE_CONFIG = {
     "downloads":       ("GitHub downloads", DOWNLOAD_ICON),
     "followers":       ("GitHub followers", FOLLOWERS_ICON),
     "watchers":        ("GitHub watchers",  EYE_ICON),
-    "workflow_status": ("build",            WORKFLOW_ICON),
-    "license":         ("license",          LICENSE_ICON),
+    "workflow_status": ("Build",            WORKFLOW_ICON),
+    "license":         ("License",          LICENSE_ICON),
 }
 
 
