@@ -99,11 +99,17 @@ def generate_badge_svg(
     icon_path = icon_info["path"]
     orig_w, orig_h = icon_info["w"], icon_info["h"]
 
-    # Override label for workflow
-    if badge_type == "workflow_status":
-        wf = options.get("workflow", "")
-        if wf:
-            label_text = wf.replace(".yml", "").replace(".yaml", "")
+    # Dynamic label precedence: User Label > Workflow Name > workflow filename > static default
+    if "label" in options and options["label"]:
+        label_text = str(options["label"])
+    elif badge_type == "workflow_status":
+        wf_name = options.get("workflow_name", "")
+        if wf_name:
+            label_text = wf_name
+        else:
+            wf = options.get("workflow", "")
+            if wf:
+                label_text = wf.replace(".yml", "").replace(".yaml", "")
 
     # Value text
     if isinstance(value, int):

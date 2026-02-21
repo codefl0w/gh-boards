@@ -141,9 +141,10 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
     manifest_updated = False
 
     # ── In-memory request cache (dedup API calls within this run) ────────
-    repo_meta_cache = {}   # repo_name → full /repos/{owner}/{repo} JSON
-    downloads_cache = {}   # repo_name → int
+    repo_meta_cache = {}     # repo_name → full /repos/{owner}/{repo} JSON
+    downloads_cache = {}     # repo_name → int
     user_profile_cache = {}  # "profile" → full /users/{user} JSON
+    workflow_run_cache = {}  # (repo_name, workflow) → full workflow run JSON
 
     def _get_repo_meta(repo_name):
         if repo_name not in repo_meta_cache:
@@ -229,10 +230,17 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             elif badge_type == "workflow_status":
                 from core.github_client import fetch_latest_workflow_run, workflow_status_label
                 wf = opts.get("workflow") or None
-                run, _, _ = fetch_latest_workflow_run(username, target_repo, headers, wf)
+                cache_key = (target_repo, wf)
+                if cache_key not in workflow_run_cache:
+                    run_data, _, _ = fetch_latest_workflow_run(username, target_repo, headers, wf)
+                    workflow_run_cache[cache_key] = run_data or {}
+                
+                run = workflow_run_cache[cache_key]
                 status_text, status_color = workflow_status_label(run)
                 value = status_text
                 opts["color"] = status_color
+                if run and run.get("name"):
+                    opts["workflow_name"] = run.get("name")
                 if wf:
                     opts["workflow"] = wf
 
@@ -250,6 +258,13 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             if badge_type == "followers":
                 out_file = user_dir / "profile" / f"{art_id}.svg"
                 canonical_path = f"profile/{art_id}.svg"
+            elif badge_type == "workflow_status":
+                safe_repo = target_repo.replace("/", "_")
+                wf = opts.get("workflow") or "latest"
+                safe_wf = str(wf).replace(".yml", "").replace(".yaml", "").replace("/", "_")
+                filename = f"{art_id}_{safe_repo}_{safe_wf}.svg"
+                out_file = user_dir / "badge" / filename
+                canonical_path = f"badge/{filename}"
             else:
                 safe_repo = target_repo.replace("/", "_")
                 filename = f"{art_id}_{safe_repo}.svg"

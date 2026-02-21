@@ -92,6 +92,8 @@ class handler(BaseHTTPRequestHandler):
                 "label_color": label_color,
                 "text_style": text_style,
             }
+            if label: # Added label to badge_opts if present
+                badge_opts["label"] = label
 
             if badge_type == "stars":
                 repo_data = fetch_repo(user, repo, headers)
@@ -113,6 +115,8 @@ class handler(BaseHTTPRequestHandler):
                 value = status_text
                 # Override color with status-driven color
                 badge_opts["color"] = status_color
+                if run and run.get("name"):
+                    badge_opts["workflow_name"] = run.get("name")
                 if wf:
                     badge_opts["workflow"] = wf
 
