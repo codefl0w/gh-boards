@@ -26,8 +26,8 @@ class handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'image/svg+xml; charset=utf-8')
         
-        # Public Cache: 12 hour (43200s), stale-while-revalidate for 1 day
-        self.send_header('Cache-Control', 's-maxage=43200, stale-while-revalidate=86400')
+        # Public Cache: 24 hour (86400s)
+        self.send_header('Cache-Control', 's-maxage=86400, stale-while-revalidate=86400')
         
         if origin and any(allowed in origin for allowed in allowed_origins):
             self.send_header('Access-Control-Allow-Origin', origin)
