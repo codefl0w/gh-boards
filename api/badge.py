@@ -68,6 +68,7 @@ class handler(BaseHTTPRequestHandler):
         label_color = query.get("label_color", ["#555"])[0]
         text_style = query.get("text_style", ["normal"])[0]
         workflow = query.get("workflow", [""])[0]
+        label = query.get("label", [""])[0]
 
         if not user:
             self.wfile.write(_error_svg("error: user required"))
