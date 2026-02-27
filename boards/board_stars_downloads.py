@@ -94,7 +94,7 @@ def generate_svg_content(username: str, rows: List[Tuple[str, int, int]], option
     if show_stars:
         lines.append(f'<g transform="translate({footer_x_base}, {footer_y - 4})">')
         lines.append(f'<path d="{STAR_PATH}" fill="{muted}"/>')
-        lines.append(f'<text x="22" y="14" fill="{muted}" font-size="13" font-family="{font_family}">{abbreviate(total_stars)}</text>')
+        lines.append(f'<text x="20" y="14" fill="{muted}" font-size="13" font-family="{font_family}">{abbreviate(total_stars)}</text>')
         lines.append("</g>")
 
     lines.append(
