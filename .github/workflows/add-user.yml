@@ -49,7 +49,8 @@ jobs:
             ## Success! :tada:
             User `@${{ steps.process.outputs.USER_NAME }}` has been added/updated.
             
-            Your board will be generated in the next hourly run, or you can use the instant preview link immediately.
+            Your artifacts will be generated in the next hourly run, or you can use the instant preview link immediately.
+            Generated artifacts can be viewed at https://codefl0w.xyz/gh-boards
             
             Closing this issue.
       - name: Close Issue
