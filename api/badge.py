@@ -128,6 +128,10 @@ class handler(BaseHTTPRequestHandler):
                 if not lic.get("name"):
                     badge_opts["color"] = "#d73a49"
 
+            elif badge_type == "forks":
+                repo_data = fetch_repo(user, repo, headers)
+                value = int((repo_data or {}).get("forks_count", 0))
+
             else:
                 self.wfile.write(_error_svg(f"unknown type: {badge_type}"))
                 return

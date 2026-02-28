@@ -250,6 +250,9 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
                 if not lic.get("name"):
                     opts["color"] = "#d73a49"
 
+            elif badge_type == "forks":
+                value = int(_get_repo_meta(target_repo).get("forks_count", 0))
+
             else:
                 print(f"[{username}] Unknown badge_type '{badge_type}', skipping")
                 continue
