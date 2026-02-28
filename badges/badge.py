@@ -8,6 +8,8 @@ Supported badge_type values:
   - followers     (user-level)
   - watchers      (repo-level, uses subscribers_count)
   - workflow_status (repo-level, status text + status-driven color)
+  - forks         (repo-level)
+  - license       (repo-level)
 """
 from typing import Dict, Union
 from pathlib import Path
