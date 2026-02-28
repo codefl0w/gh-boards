@@ -81,6 +81,7 @@ BADGE_CONFIG = {
     "workflow_status": ("Build",            WORKFLOW_ICON),
     "license":         ("License",          LICENSE_ICON),
     "forks":           ("forks",            FORK_ICON),
+    "custom":          ("custom",           None),
 }
 
 
@@ -105,8 +106,10 @@ def generate_badge_svg(
 
     # Look up label & icon info
     label_text, icon_info = BADGE_CONFIG.get(badge_type, ("badge", STAR_ICON))
-    icon_path = icon_info["path"]
-    orig_w, orig_h = icon_info["w"], icon_info["h"]
+    has_icon = icon_info is not None
+    if has_icon:
+        icon_path = icon_info["path"]
+        orig_w, orig_h = icon_info["w"], icon_info["h"]
 
     # Dynamic label precedence: User Label > Workflow Name > workflow filename > static default
     if "label" in options and options["label"]:
@@ -133,14 +136,17 @@ def generate_badge_svg(
 
     # Layout calculation
     h = 20
-    target_icon_h = 14
-    scale = target_icon_h / orig_h
-    icon_w = orig_w * scale
-    
-    icon_pad = 5
     pad = 6
-    
-    label_w = pad + icon_w + icon_pad + _text_width(label_text, font_size) + pad
+
+    if has_icon:
+        target_icon_h = 14
+        scale = target_icon_h / orig_h
+        icon_w = orig_w * scale
+        icon_pad = 5
+        label_w = pad + icon_w + icon_pad + _text_width(label_text, font_size) + pad
+    else:
+        label_w = pad + _text_width(label_text, font_size) + pad
+
     value_w = pad + _text_width(value_text, font_size) + pad
     value_w = max(value_w, 32)
     total_w = label_w + value_w
@@ -154,17 +160,21 @@ def generate_badge_svg(
     svg += f'<rect x="{label_w - 3:.0f}" width="6" height="{h}" fill="{esc(label_color)}"/>'
     svg += f'<rect x="{label_w:.0f}" width="3" height="{h}" fill="{esc(color)}"/>'
 
-    # Icon
-    icon_x = pad
-    icon_y = (h - target_icon_h) / 2
-    svg += (
-        f'<g transform="translate({icon_x:.1f},{icon_y:.1f}) scale({scale:.4f})">'
-        f'<path d="{icon_path}" fill="#fff"/>'
-        f'</g>'
-    )
+    # Icon (only if present)
+    if has_icon:
+        icon_x = pad
+        icon_y = (h - target_icon_h) / 2
+        svg += (
+            f'<g transform="translate({icon_x:.1f},{icon_y:.1f}) scale({scale:.4f})">'
+            f'<path d="{icon_path}" fill="#fff"/>'
+            f'</g>'
+        )
 
     # Label text
-    text_x = pad + icon_w + icon_pad
+    if has_icon:
+        text_x = pad + icon_w + icon_pad
+    else:
+        text_x = pad
     text_y = h / 2 + font_size * 0.36
     svg += (
         f'<text x="{text_x:.0f}" y="{text_y:.1f}" fill="#fff" '

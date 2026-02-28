@@ -74,8 +74,8 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(_error_svg("error: user required"))
             return
 
-        # repo is required for everything except followers
-        if badge_type != "followers" and not repo:
+        # repo is required for everything except followers and custom
+        if badge_type not in ("followers", "custom") and not repo:
             self.wfile.write(_error_svg("error: repo required"))
             return
 
@@ -131,6 +131,9 @@ class handler(BaseHTTPRequestHandler):
             elif badge_type == "forks":
                 repo_data = fetch_repo(user, repo, headers)
                 value = int((repo_data or {}).get("forks_count", 0))
+
+            elif badge_type == "custom":
+                value = query.get("value", [""])[0] or ""
 
             else:
                 self.wfile.write(_error_svg(f"unknown type: {badge_type}"))

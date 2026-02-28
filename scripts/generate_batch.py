@@ -201,8 +201,8 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             badge_type = opts.get("badge_type", "stars")
             target_repo = opts.get("repo", "")
 
-            # Followers is user-level — no repo needed
-            if badge_type != "followers" and not target_repo:
+            # Followers and custom are user-level — no repo needed
+            if badge_type not in ("followers", "custom") and not target_repo:
                 print(f"[{username}] Badge '{art_id}' missing 'repo' option, skipping")
                 continue
 
@@ -253,12 +253,15 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
             elif badge_type == "forks":
                 value = int(_get_repo_meta(target_repo).get("forks_count", 0))
 
+            elif badge_type == "custom":
+                value = opts.get("value", "")
+
             else:
                 print(f"[{username}] Unknown badge_type '{badge_type}', skipping")
                 continue
 
             # Path: user-level badges → profile/, repo-specific → badge/
-            if badge_type == "followers":
+            if badge_type in ("followers", "custom"):
                 out_file = user_dir / "profile" / f"{art_id}.svg"
                 canonical_path = f"profile/{art_id}.svg"
             elif badge_type == "workflow_status":
