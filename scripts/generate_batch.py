@@ -265,17 +265,15 @@ def process_manifest(path: Path, headers: Dict[str, str]) -> None:
                 out_file = user_dir / "profile" / f"{art_id}.svg"
                 canonical_path = f"profile/{art_id}.svg"
             elif badge_type == "workflow_status":
-                safe_repo = target_repo.replace("/", "_")
                 wf = opts.get("workflow") or "latest"
                 safe_wf = str(wf).replace(".yml", "").replace(".yaml", "").replace("/", "_")
-                filename = f"{art_id}_{safe_repo}_{safe_wf}.svg"
-                out_file = user_dir / "badge" / filename
-                canonical_path = f"badge/{filename}"
+                # Group by repository: out/{USER}/badge/{REPO}/{art_id}_{safe_wf}.svg
+                out_file = user_dir / "badge" / target_repo / f"{art_id}_{safe_wf}.svg"
+                canonical_path = f"badge/{target_repo}/{art_id}_{safe_wf}.svg"
             else:
-                safe_repo = target_repo.replace("/", "_")
-                filename = f"{art_id}_{safe_repo}.svg"
-                out_file = user_dir / "badge" / filename
-                canonical_path = f"badge/{filename}"
+                # Group by repository: out/{USER}/badge/{REPO}/{art_id}.svg
+                out_file = user_dir / "badge" / target_repo / f"{art_id}.svg"
+                canonical_path = f"badge/{target_repo}/{art_id}.svg"
 
             render_badge_svg(username, target_repo, value, out_file, opts)
             print(f"[{username}] Wrote badge {out_file} ({badge_type}={value})")
