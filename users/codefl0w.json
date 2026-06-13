@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "user": "codefl0w",
-  "created_on": "2026-03-08T12:11:59.433Z",
+  "created_on": "2026-06-13T22:01:31.547Z",
   "defaults": {
     "theme": "dark"
   },
@@ -23,9 +23,7 @@
         "text_style": "normal",
         "repo": "mtkclient-windows-installer",
         "value": ""
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_license.svg"
+      }
     },
     {
       "id": "badge_stars",
@@ -41,9 +39,7 @@
         "text_style": "normal",
         "repo": "mtkclient-windows-installer",
         "value": ""
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_stars.svg"
+      }
     },
     {
       "id": "board_stars_downloads",
@@ -56,9 +52,7 @@
         "max_repos": 10,
         "show_stars": true,
         "show_downloads": true
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/board_stars_downloads.svg"
+      }
     },
     {
       "id": "badge_downloads",
@@ -74,9 +68,7 @@
         "text_style": "normal",
         "repo": "mtkclient-windows-installer",
         "value": ""
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_downloads.svg"
+      }
     },
     {
       "id": "badge_workflow",
@@ -91,11 +83,8 @@
         "label_color": "#555555",
         "text_style": "normal",
         "repo": "mtkclient-windows-installer",
-        "value": "",
-        "workflow_name": "Build Windows Release"
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_workflow_latest.svg"
+        "value": ""
+      }
     },
     {
       "id": "badge_forks",
@@ -111,9 +100,7 @@
         "text_style": "normal",
         "repo": "mtkclient-windows-installer",
         "value": ""
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_forks.svg"
+      }
     },
     {
       "id": "badge_stars_2",
@@ -127,10 +114,9 @@
         "color": "#2ea44f",
         "label_color": "#555555",
         "text_style": "normal",
-        "repo": "QuickADB"
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_stars_2.svg"
+        "repo": "QuickADB",
+        "value": ""
+      }
     },
     {
       "id": "badge_downloads_2",
@@ -144,10 +130,9 @@
         "color": "#2ea44f",
         "label_color": "#555555",
         "text_style": "normal",
-        "repo": "QuickADB"
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_downloads_2.svg"
+        "repo": "QuickADB",
+        "value": ""
+      }
     },
     {
       "id": "badge_workflow_2",
@@ -162,10 +147,8 @@
         "label_color": "#555555",
         "text_style": "normal",
         "repo": "QuickADB",
-        "workflow_name": "Build QuickADB"
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_workflow_2_latest.svg"
+        "value": ""
+      }
     },
     {
       "id": "badge_license_2",
@@ -179,10 +162,9 @@
         "color": "#2ea44f",
         "label_color": "#555555",
         "text_style": "normal",
-        "repo": "QuickADB"
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_license_2.svg"
+        "repo": "QuickADB",
+        "value": ""
+      }
     },
     {
       "id": "badge_custom",
@@ -198,20 +180,31 @@
         "text_style": "normal",
         "label": "Supported platforms",
         "value": "Windows | Linux | MacOS"
-      },
-      "last_rendered_at": "2026-06-13T20:21:04Z",
-      "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/badge_custom.svg"
+      }
+    },
+    {
+      "id": "badge_custom_2",
+      "type": "badge",
+      "style": "badge_custom",
+      "target": "profile",
+      "theme": "dark",
+      "status": "active",
+      "options": {
+        "badge_type": "custom",
+        "color": "#2ea44f",
+        "label_color": "#555555",
+        "text_style": "normal",
+        "label": "Version",
+        "value": "V1.0.0"
+      }
     }
   ],
   "cache": {
     "repos_etag": null,
-    "last_checked": "2026-06-13T20:21:03Z"
+    "last_checked": null
   },
   "meta": {
     "requested_by": "web-ui",
-    "requested_at": "2026-03-08T12:11:59.433Z",
-    "last_processed_by": "scripts/generate_batch",
-    "last_processed_at": "2026-06-13T20:21:04Z"
-  },
-  "last_update": "2026-06-13T20:21:04Z"
+    "requested_at": "2026-06-13T22:01:31.547Z"
+  }
 }
