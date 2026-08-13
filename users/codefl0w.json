@@ -24,7 +24,7 @@
         "repo": "mtkclient-windows-installer",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_license.svg"
     },
     {
@@ -42,7 +42,7 @@
         "repo": "mtkclient-windows-installer",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_stars.svg"
     },
     {
@@ -57,7 +57,7 @@
         "show_stars": true,
         "show_downloads": true
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/board_stars_downloads.svg"
     },
     {
@@ -75,7 +75,7 @@
         "repo": "mtkclient-windows-installer",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_downloads.svg"
     },
     {
@@ -94,7 +94,7 @@
         "value": "",
         "workflow_name": "Build Windows Release"
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_workflow_latest.svg"
     },
     {
@@ -112,7 +112,7 @@
         "repo": "mtkclient-windows-installer",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/mtkclient-windows-installer/badge_forks.svg"
     },
     {
@@ -130,7 +130,7 @@
         "repo": "QuickADB",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_stars_2.svg"
     },
     {
@@ -148,7 +148,7 @@
         "repo": "QuickADB",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:34Z",
+      "last_rendered_at": "2026-08-13T15:03:24Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_downloads_2.svg"
     },
     {
@@ -167,7 +167,7 @@
         "value": "",
         "workflow_name": "Build QuickADB"
       },
-      "last_rendered_at": "2026-08-13T13:25:35Z",
+      "last_rendered_at": "2026-08-13T15:03:25Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_workflow_2_latest.svg"
     },
     {
@@ -185,7 +185,7 @@
         "repo": "QuickADB",
         "value": ""
       },
-      "last_rendered_at": "2026-08-13T13:25:35Z",
+      "last_rendered_at": "2026-08-13T15:03:25Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/badge/QuickADB/badge_license_2.svg"
     },
     {
@@ -203,7 +203,7 @@
         "label": "Supported platforms",
         "value": "Windows | Linux | MacOS"
       },
-      "last_rendered_at": "2026-08-13T13:25:35Z",
+      "last_rendered_at": "2026-08-13T15:03:25Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/badge_custom.svg"
     },
     {
@@ -221,7 +221,7 @@
         "label": "Version",
         "value": "V1.0.0"
       },
-      "last_rendered_at": "2026-08-13T13:25:35Z",
+      "last_rendered_at": "2026-08-13T15:03:25Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/badge_custom_2.svg"
     },
     {
@@ -239,7 +239,7 @@
         "label": "Supported Archs",
         "value": "X86_64 | ARM64"
       },
-      "last_rendered_at": "2026-08-13T13:25:35Z",
+      "last_rendered_at": "2026-08-13T15:03:25Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/badge_custom_3.svg"
     },
     {
@@ -257,19 +257,19 @@
         "label": "MiniOS Version",
         "value": "V1.1.0"
       },
-      "last_rendered_at": "2026-08-13T13:25:35Z",
+      "last_rendered_at": "2026-08-13T15:03:25Z",
       "canonical_url": "https://codefl0w.xyz/gh-boards/out/codefl0w/profile/badge_custom_4.svg"
     }
   ],
   "cache": {
     "repos_etag": null,
-    "last_checked": "2026-08-13T13:25:34Z"
+    "last_checked": "2026-08-13T15:03:24Z"
   },
   "meta": {
     "requested_by": "web-ui",
     "requested_at": "2026-08-07T10:57:04.251Z",
     "last_processed_by": "scripts/generate_batch",
-    "last_processed_at": "2026-08-13T13:25:35Z"
+    "last_processed_at": "2026-08-13T15:03:25Z"
   },
-  "last_update": "2026-08-13T13:25:35Z"
+  "last_update": "2026-08-13T15:03:25Z"
 }
